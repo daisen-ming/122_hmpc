@@ -28,7 +28,7 @@
 
         <!-- 第四行: 登录按钮  -->
         <el-form-item>
-          <el-button class="login-btn" type="primary" @click="loginFn">登录</el-button>
+          <el-button class="login-btn" type="primary" @click="loginFn" >登录</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -37,6 +37,7 @@
 
 <script>
 import { loginAPI } from '@/api/index.js'
+import { loginRules } from '@/verify'
 export default {
   name: 'Login',
   data () {
@@ -46,44 +47,24 @@ export default {
         code: '', // 验证码
         check: false // 复选框的值
       },
-      rules: {
-        mobile: [
-          {
-            required: true,
-            pattern: /^1[3|4|5|6|7|8|9]\d{9}$/,
-            message: '手机号格式不正确',
-            trigger: 'blur'
-          }
-        ],
-        code: [
-          {
-            required: true,
-            len: 6,
-            message: '验证码不正确',
-            trigger: 'change'
-          }
-        ],
-        check: [
-          {
-            validator: (rule, value, callback) => {
-              if (value === false) {
-                callback(new Error('请勾选协议'))
-              } else {
-                callback()
-              }
-            },
-            trigger: 'change'
-          }
-        ]
-      }
+      rules: loginRules
     }
   },
   methods: {
     loginFn () {
       this.$refs.form.validate(async valia => {
         if (valia === false) return
+        this.load = true
         const res = await loginAPI(this.form)
-        console.log(res)
+        this.$message({
+          message: '登录成功',
+          type: 'success'
+        })
+        this.load = false
+
+        sessionStorage.setItem('token', res.data.data.token)
+
+        this.$router.push('/layout')
       })
     }
   }
