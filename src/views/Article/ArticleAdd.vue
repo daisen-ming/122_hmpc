@@ -25,13 +25,24 @@
        </quill-editor>
        </el-form-item>
         <el-form-item label="封面">
-          <el-radio-group v-model="article.cover.type">
+          <el-radio-group
+          v-model="article.cover.type"
+          @change="typeChange"
+          >
             <el-radio :label="1">单图</el-radio>
             <el-radio :label="3">三张</el-radio>
             <el-radio :label="0">无图</el-radio>
             <el-radio :label="-1">自动</el-radio>
           </el-radio-group>
         </el-form-item>
+<!-- 封面图片组件 -->
+          <el-form-item>
+              <el-row :gutter="20">
+                <el-col :span="5">
+                  <my-cover></my-cover>
+                </el-col>
+              </el-row>
+          </el-form-item>
         <el-form-item label="频道" prop="channel_id">
           <el-select v-model="article.channel_id" placeholder="请选择活动区域">
             <el-option
@@ -54,12 +65,15 @@
 </template>
 
 <script>
-import { channelListAPI, articleAddAPI } from '@/api'
+import { channelListAPI, articleAddAPI, articleByIdAPI, articleUpdateAPI } from '@/api'
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
 import { quillEditor } from 'vue-quill-editor'
+// 规则
 import { articleAddRules } from '@/verify'
+// 引入封面组件mycover
+import MyCover from '@/components/MyCover'
 
 export default {
   name: 'articleadd',
@@ -88,29 +102,62 @@ export default {
           ]
         }
       },
-      rules: articleAddRules
+      rules: articleAddRules,
+      artId: -1
     }
   },
   methods: {
     createFn (bool) {
       this.$refs.form.validate(async valid => {
         if (valid === false) return
-        console.log(123)
-        await articleAddAPI({ draft: bool }, this.article)
-        this.$message({
-          message: '发布文章成功',
-          type: 'success'
-        })
+
+        if (this.artId !== -1) {
+          await articleUpdateAPI(this.artId, { draft: bool }, this.article)
+          this.$message({
+            message: '修改成功',
+            type: 'success'
+          })
+          this.$router.replace('/layout/articleList')
+        } else {
+          console.log(123)
+          await articleAddAPI({ draft: bool }, this.article)
+          this.$message({
+            message: '发布文章成功',
+            type: 'success'
+          })
+        }
+
         Object.assign(this.article, this.$options.data().article)
       })
+    },
+    typeChange () {
+      if (this.article.cover.type === 0 || this.article.cover.type === -1) {
+        this.article.cover.images = []
+      }
     }
   },
   async created () {
     const res = await channelListAPI()
     this.channelArr = res.data.data.channels
+    if (this.$route.query.id) {
+      this.artId = this.$route.query.id
+      const artRes = await articleByIdAPI(this.artId)
+      if (Object.keys(artRes.data.data).length === 0) {
+        this.$message({
+          message: '查无此文章',
+          type: 'warning',
+          onClose: () => {
+            this.$router.replace('/layout/articleList')
+          }
+        })
+      } else {
+        this.article = artRes.data.data
+      }
+    }
   },
   components: {
-    quillEditor
+    quillEditor,
+    MyCover
   }
 }
 </script>

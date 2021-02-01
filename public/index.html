@@ -4,6 +4,10 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
+   <!-- 有的第三方图片, 会验证你发起图片请求所在的域名
+           不带referre请求头,
+     让第三方网站无法验证(跳过了验证过程就会把图片返回给你-不会出现403)     --> 
+    <meta name="referrer" content="no-referrer" /> 
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <title><%= htmlWebpackPlugin.options.title %></title>
   </head>

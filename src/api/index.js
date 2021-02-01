@@ -19,10 +19,8 @@ export const loginAPI = function (data) {
 export const userInfoAPI = () => {
   return request({
     url: '/mp/v1_0/user/profile',
-    method: 'GET',
-    headers: {
-      Authorization: 'Bearer ' + sessionStorage.getItem('token')
-    }
+    method: 'GET'
+
   })
 }
 
@@ -37,18 +35,44 @@ export const articleAddAPI = (params, data) => request({
   url: '/mp/v1_0/articles',
   method: 'POST',
   params,
-  data,
-  headers: {
-    Authorization: 'Bearer ' + sessionStorage.getItem('token')
-  }
+  data
+
 })
 
 // 文章列表
 export const articleListAPI = params => request({
   url: '/mp/v1_0/articles',
   method: 'GET',
-  headers: {
-    Authorization: 'Bearer ' + sessionStorage.getItem('token')
-  },
+
+  params
+})
+
+// 文章--某个详情
+export const articleByIdAPI = id => request({
+  url: '/mp/v1_0/articles/' + id,
+  method: 'GET'
+
+})
+
+// 文章---更新文章
+export const articleUpdateAPI = (id, params, body) => request({
+  url: '/mp/v1_0/articles/' + id, // 路径传参
+  method: 'PUT',
+
+  params, // ?后面
+  data: body// 请求体
+})
+
+// 文章---删除文章
+export const articleDeleteAPI = id => request({
+  url: '/mp/v1_0/articles/' + id,
+  method: 'DELETE'
+
+})
+
+// 素材库---获取图片
+export const UserImageListAPI = params => request({
+  url: '/mp/v1_0/user/images',
+  method: 'GET',
   params
 })

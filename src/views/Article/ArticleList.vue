@@ -59,7 +59,7 @@
           </el-col>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" >查询</el-button>
+          <el-button type="primary" @click="searchFn" :loading='load'>查询</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -67,10 +67,11 @@
 <el-card style="margin-top:20px;">
     <!-- 卡片头部导航 -->
 
-     <div slot="header" class="clearfix">根据筛选条件查询到XXXX条数据：</div>
+     <div slot="header" class="clearfix">根据筛选条件查询到{{total}}条数据：</div>
 <!-- 头部正文 -->
 <el-table
     :data="tableData"
+    v-loading="load"
     stripe
     style="width: 100%">
     <el-table-column
@@ -140,11 +141,15 @@
         </template>
     </el-table-column>
   </el-table>
+
+  <!-- js中对reqParams.page条件修改了,也要同步影响下边的页码显示 -->
 <el-pagination
+:disabled="load"
    style="margin-top:10px;"
    background
    layout="prev, pager, next"
    @current-change="changePage"
+   :current-page="reqParams.page"
    :total="total">
       </el-pagination>
 
@@ -154,7 +159,7 @@
 </template>
 
 <script>
-import { channelListAPI, articleListAPI } from '@/api'
+import { channelListAPI, articleListAPI, articleDeleteAPI } from '@/api'
 export default {
   name: 'articlelist',
   data () {
@@ -171,21 +176,56 @@ export default {
       reqParams: {
         page: 1,
         per_page: 10
-      }
+      },
+      load: false
 
     }
   },
   methods: {
-    hEdit (index, obj) {},
-    hDelete (index, obj) {},
+    // 编辑功能
+    hEdit (index, obj) {
+      this.$router.push({
+        path: '/layout/addArticle',
+        query: {
+          id: obj.id
+        }
+      })
+    },
+
+    // 删除功能
+    hDelete (index, obj) {
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        await articleDeleteAPI(obj.id)
+        this.getArticleListFn()
+        this.$message({
+          type: 'success',
+          message: '删除成功!'
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
     changePage (page) {
       this.reqParams.page = page
       this.getArticleListFn()
     },
+    searchFn () {
+      this.reqParams.page = 1
+      this.getArticleListFn()
+    },
     async getArticleListFn () {
+      this.load = true
       const articleRes = await articleListAPI(Object.assign({}, this.form, this.reqParams))
       this.tableData = articleRes.data.data.results
       this.total = articleRes.data.data.total_count
+      this.load = false
     }
   },
   async created () {
