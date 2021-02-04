@@ -49,5 +49,34 @@ export const articleAddRules = {
       trigger: 'blur',
       message: '频道必须选择'
     }
+  ],
+  cover: [
+    {
+      validator: (rule, value, callback) => {
+        if (value.images.indexOf(undefined) > -1)callback(new Error('数量不对'))
+        else if (value.type === value.images.length || value.type === -1)callback()
+        else callback(new Error('数量不对'))
+      }
+    }
+  ]
+}
+
+export const updateUserRules = {
+  name: [
+    {
+      min: 1,
+      max: 7,
+      required: true,
+      message: '昵称1到7个字符',
+      trigger: 'blur' // 在失去焦点触发验证规则
+    }
+  ],
+  email: [
+    {
+      required: true,
+      pattern: /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/,
+      message: '邮箱格式不正确',
+      trigger: 'blur'
+    }
   ]
 }

@@ -39,6 +39,26 @@ const routes = [
         path: 'articleList',
         name: 'articleList',
         component: () => import('@/views/Article/ArticleList')
+      },
+      {
+        path: 'image',
+        name: 'images',
+        component: () => import('@/views/Images/Images')
+      },
+      {
+        path: 'comment',
+        name: 'comment',
+        component: () => import('@/views/Comment/Comment')
+      },
+      {
+        path: 'fans',
+        name: 'fans',
+        component: () => import('@/views/Fans/Fans')
+      },
+      {
+        path: 'settings',
+        name: 'settings',
+        component: () => import('@/views/Settings/Settings')
       }
 
     ]

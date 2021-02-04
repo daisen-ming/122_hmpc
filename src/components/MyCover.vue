@@ -3,7 +3,7 @@
   <div class="my-cover">
     <!-- 图片按钮(组件使用后上来显示的图片) -->
     <div class="btn_img" @click="openDialog()">
-      <img src="../assets/default.png" />
+      <img :src="coverImageUrl" />
     </div>
 
     <!-- 对话框(默认不显示)
@@ -42,12 +42,14 @@
               :lg="4"
               v-for=" obj in imgList"
               :key="obj.id"
+              @click.native="selectedFn(obj)"
             >
               <!-- 确定图片如何适应容器框fit:cover -->
               <el-image
                 style="height: 100px"
                 :src="obj.url"
                 fit="cover"
+                :class="{selected:selectedImgUrl===obj.url}"
               ></el-image>
             </el-col>
           </el-row>
@@ -62,11 +64,24 @@
           </el-pagination>
         </el-tab-pane>
 
-        <el-tab-pane label="上传图片" name="upload">上传图片内容</el-tab-pane>
+        <el-tab-pane label="上传图片" name="upload">
+<el-upload
+  class="upload-demo"
+  action="http://api-toutiao-web.itheima.net/mp/v1_0/user/images"
+  :headers="headers"
+  name="image"
+  :show-file-list="false"
+  :before-upload="beforeAvatarUpload"
+  :on-success="handleAvatarSuccess"
+  >
+   <img v-if="imageUrl" :src="imageUrl" class="avatar">
+  <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+</el-upload>
+        </el-tab-pane>
       </el-tabs>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+        <el-button type="primary" @click="confirmFn">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -91,23 +106,17 @@ export default {
       },
       imgList: [], // 图片素材数组
       imgType: '全部', // 默认显示 '全部'//全部/收藏图片标签栏的文字绑定
-      total: 0
+      total: 0,
+      selectedImgUrl: null,
+      headers: {
+        Authorization: 'Bearer ' + sessionStorage.getItem('token')
+      },
+      imageUrl: ''
     }
   },
-  methods: {
-    openDialog () {
-      this.dialogVisible = true
-    },
-    async getUserImgFn () {
-      const res = await UserImageListAPI(this.reqParams)
-      // console.log(res)
-      this.imgList = res.data.data.results
-      this.total = res.data.data.total_count
-    },
-    changePage (page) {
-      this.reqParams.page = page
-      this.getUserImgFn()
-    }
+  props: {
+    index: Number,
+    value: String
   },
   watch: {
     imgType (newVal) {
@@ -119,9 +128,72 @@ export default {
       //     this.reqParams.collect = true// 收藏
       //   }
       this.getUserImgFn()
+    },
+    value: {
+      immediate: true, // 立即监听执行(网页刚打开时, 第一次接收值就触发函数执行)
+      handler (newVal) {
+        console.log(newVal)
+        if (newVal !== undefined) {
+          this.coverImageUrl = newVal
+        }
+      }
     }
   },
-  async created () {
+  methods: {
+
+    beforeAvatarUpload (file) { // 文件上传之前 (先判断验证下)
+      const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'
+      const isLt2M = file.size / 1024 / 1024 < 2 // 1Kb = 1024byte  (1byte=8Bit(二进制))
+      // 例如 file.size的值 3000000 / 1024 / 1024的值 2.8Mb
+      if (!isJPG) {
+        this.$message.error('图片只能是 JPG 格式 / PNG格式!')
+      }
+      if (!isLt2M) {
+        this.$message.error('图片大小不能超过 2Mb!')
+      }
+
+      return isJPG && isLt2M // 如果返回true就开始上传, 如果返回false则停止上传
+    },
+    handleAvatarSuccess (res, file) {
+      // console.log(res)
+      this.imageUrl = res.data.url
+      this.getUserImgFn()
+    },
+    openDialog () {
+      this.dialogVisible = true
+      this.selectedImgUrl = this.coverImageUrl
+    },
+    async getUserImgFn () {
+      const res = await UserImageListAPI(this.reqParams)
+      // console.log(res)
+      this.imgList = res.data.data.results
+      this.total = res.data.data.total_count
+    },
+    changePage (page) {
+    //   this.reqParams.page = page
+      this.reqParams.page = page
+      this.getUserImgFn()
+    },
+    selectedFn (obj) {
+      if (this.selectedImgUrl === obj.url) {
+        this.selectedImgUrl = defaultPng
+      } else {
+        this.selectedImgUrl = obj.url
+      }
+    },
+    confirmFn () {
+      this.dialogVisible = false
+      this.coverImageUrl = this.selectedImgUrl
+      // this.$emit('coverimg', this.coverImageUrl, this.index)
+      if (this.coverImageUrl === defaultPng) {
+        this.$emit('coverimg', false, this.index)
+      } else {
+        this.$emit('coverimg', this.coverImageUrl, this.index)
+      }
+    }
+  },
+
+  created () {
     this.getUserImgFn()
   }
 }
@@ -159,4 +231,39 @@ export default {
 .img_item {
   position: relative;
 }
+
+/* 选中样式 */
+.selected::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3) url(../assets/selected.png) no-repeat center /
+    50px 50px;
+}
+.avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 178px;
+    height: 178px;
+    line-height: 178px;
+    text-align: center;
+  }
+  .avatar {
+    width: 178px;
+    height: 178px;
+    display: block;
+  }
 </style>

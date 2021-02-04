@@ -36,10 +36,10 @@
           </el-radio-group>
         </el-form-item>
 <!-- 封面图片组件 -->
-          <el-form-item>
-              <el-row :gutter="20">
-                <el-col :span="5">
-                  <my-cover></my-cover>
+          <el-form-item prop="cover">
+              <el-row :gutter="20" v-if="article.cover.type !== -1">
+                <el-col :span="5" v-for="(num, index) in article.cover.type" :key="num">
+                  <my-cover @coverimg='coverImgFn' :index='index' v-model="article.cover.images[index]"></my-cover>
                 </el-col>
               </el-row>
           </el-form-item>
@@ -119,7 +119,7 @@ export default {
           })
           this.$router.replace('/layout/articleList')
         } else {
-          console.log(123)
+          // console.log(123)
           await articleAddAPI({ draft: bool }, this.article)
           this.$message({
             message: '发布文章成功',
@@ -130,10 +130,21 @@ export default {
         Object.assign(this.article, this.$options.data().article)
       })
     },
-    typeChange () {
+    typeChange () { // 封面类型改变事件
       if (this.article.cover.type === 0 || this.article.cover.type === -1) {
+        // 用户选择了封面为无图/自动, 我们要把cover下的images图片数组清空
         this.article.cover.images = []
+      } else if (this.article.cover.type === 1) { // 如果单图, 数组只保存第一个
+        this.article.cover.images = this.article.cover.images.slice(0, 1)
       }
+    },
+    coverImgFn (imgUrl, index) {
+      if (imgUrl === false) {
+        this.article.cover.images[index] = undefined
+      } else {
+        this.article.cover.images[index] = imgUrl
+      }
+      // this.article.cover.images[index] = imgUrl
     }
   },
   async created () {

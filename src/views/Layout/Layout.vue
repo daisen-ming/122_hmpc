@@ -24,7 +24,7 @@
           <i class="el-icon-document"></i>
           <span slot="title">内容管理</span>
         </el-menu-item>
-        <el-menu-item index="/image">
+        <el-menu-item index="/layout/image">
           <i class="el-icon-picture"></i>
           <span slot="title">素材管理</span>
         </el-menu-item>
@@ -32,15 +32,15 @@
           <i class="el-icon-s-promotion"></i>
           <span slot="title">发布文章</span>
         </el-menu-item>
-        <el-menu-item index="/comment">
+        <el-menu-item index="/layout/comment">
           <i class="el-icon-chat-dot-round"></i>
           <span slot="title">评论管理</span>
         </el-menu-item>
-        <el-menu-item index="/fans">
+        <el-menu-item index="/layout/fans">
           <i class="el-icon-setting"></i>
           <span slot="title">粉丝管理</span>
         </el-menu-item>
-        <el-menu-item index="/settings">
+        <el-menu-item index="/layout/settings">
           <i class="el-icon-setting"></i>
           <span slot="title">个人设置</span>
         </el-menu-item>
@@ -106,9 +106,15 @@ export default {
   },
   async created () {
     const res = await userInfoAPI()
-
     this.photo = res.data.data.photo
     this.name = res.data.data.name
+
+    this.$EventBus.$on('photourl', (url) => {
+      this.photo = url
+    })
+    this.$EventBus.$on('nameBus', (name) => {
+      this.name = name
+    })
   }
 
 }

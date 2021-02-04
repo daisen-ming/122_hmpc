@@ -40,12 +40,20 @@ ajax.interceptors.response.use(function (response) {
   return response
 }, function (error) {
   // 对响应错误做点什么
-  const errTextObj = {
-    'Please verify your real information in app.': '手机号只能是固定的',
+  const errTextObj = { // 自己写的中英文对照(后台给的错误提示太....了)
+    'Please verify your real information in app.': '手机号只能用固定的',
     'Invalid code.': '验证码错误',
-    'User must be authorized.': '身份认证失败'
+    'User must be authorized.': '身份验证失败',
+    'Invalid cover param.': '封面图片有问题_请根据选择的数量传递'
   }
-  const messageKey = error.response.data.message
+
+  let messageKey // 取出后台返回的message提示消息
+  if (typeof error.response.data.message === 'object') {
+    messageKey = error.response.data.message.cover
+  } else {
+    messageKey = error.response.data.message
+  }
+  // const messageKey = error.response.data.message
   Message({
     message: errTextObj[messageKey],
     type: 'error',
